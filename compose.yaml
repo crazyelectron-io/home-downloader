@@ -12,7 +12,6 @@ services:
     volumes:
       - /mnt/data/appdata/sabnzbd:/config:rw
       - ./config/sabnzbd:/setup
-
   sabnzbd:
     image: lscr.io/linuxserver/sabnzbd:latest
     container_name: sabnzbd
@@ -42,6 +41,47 @@ services:
       - "traefik.http.routers.sabnzbd-secure.tls=true"
       - "traefik.http.routers.sabnzbd.service=sabnzbd"
       - "traefik.http.services.sabnzbd.loadbalancer.server.port=8080"
+
+  init-transmission:
+    container_name: init-transmission
+    image: debian:stable-slim
+    restart: "no"
+    entrypoint: ["/bin/bash", "-c"]
+    command: ["ls -al /setup && ls -al /config && cp -f /setup/settings.json /config"]
+    env_file: .env
+    volumes:
+      - /mnt/data/appdata/transmission:/config:rw
+      - ./config/transmission:/setup
+  transmission:
+    image: lscr.io/linuxserver/transmission:latest
+    container_name: transmission
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Amsterdam
+    volumes:
+      - /mnt/data/appdata/transmission:/config:rw
+      - /mnt/data/media/watched:/watched:rw
+      - /mnt/data/media/downloads:/downloads:rw
+    ports:
+      - 9091:9091
+      - 51413:51413
+      - 51413:51413/udp
+    restart: unless-stopped
+    networks:
+      - frontend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.transmission.entrypoints=http"
+      - "traefik.http.routers.transmission.rule=Host(`t${TORRENT_DOMAIN}`)"
+      - "traefik.http.middlewares.transmission-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.transmission.middlewares=transmission-https-redirect"
+      - "traefik.http.routers.transmission-secure.entrypoints=https"
+      - "traefik.http.routers.transmission-secure.rule=Host(`${TORRENT_DOMAIN})"
+      - "traefik.http.routers.transmission-secure.middlewares=authentik@file"
+      - "traefik.http.routers.transmission-secure.tls=true"
+      - "traefik.http.routers.transmission.service=transmission"
+      - "traefik.http.services.transmission.loadbalancer.server.port=9091"
 
 networks:
   frontend:
