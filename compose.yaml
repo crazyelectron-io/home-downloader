@@ -33,11 +33,11 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.sabnzbd.entrypoints=http"
-      - "traefik.http.routers.sabnzbd.rule=Host(`media.moerman.online`) && PathPrefix(`/nzb`)"
+      - "traefik.http.routers.sabnzbd.rule=Host(`${MEDIA_DOMAIN}`) && PathPrefix(`/nzb`)"
       - "traefik.http.middlewares.sabnzbd-https-redirect.redirectscheme.scheme=https"
       - "traefik.http.routers.sabnzbd.middlewares=sabnzbd-https-redirect"
       - "traefik.http.routers.sabnzbd-secure.entrypoints=https"
-      - "traefik.http.routers.sabnzbd-secure.rule=Host(`media.moerman.online`) && PathPrefix(`/nzb`)"
+      - "traefik.http.routers.sabnzbd-secure.rule=Host(`${MEDIA_DOMAIN}`) && PathPrefix(`/nzb`)"
       - "traefik.http.routers.sabnzbd-secure.middlewares=authentik@file"
       - "traefik.http.routers.sabnzbd-secure.tls=true"
       - "traefik.http.routers.sabnzbd.service=sabnzbd"
