@@ -55,6 +55,7 @@ services:
   transmission:
     image: lscr.io/linuxserver/transmission:latest
     container_name: transmission
+    env_file: .env
     environment:
       - PUID=1000
       - PGID=1000
