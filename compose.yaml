@@ -73,7 +73,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.transmission.entrypoints=http"
-      - "traefik.http.routers.transmission.rule=Host(`t${TORRENT_DOMAIN}`)"
+      - "traefik.http.routers.transmission.rule=Host(`${TORRENT_DOMAIN}`)"
       - "traefik.http.middlewares.transmission-https-redirect.redirectscheme.scheme=https"
       - "traefik.http.routers.transmission.middlewares=transmission-https-redirect"
       - "traefik.http.routers.transmission-secure.entrypoints=https"
