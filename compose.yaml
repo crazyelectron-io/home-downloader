@@ -42,47 +42,98 @@ services:
       - "traefik.http.routers.sabnzbd.service=sabnzbd"
       - "traefik.http.services.sabnzbd.loadbalancer.server.port=8080"
 
-  init-transmission:
-    container_name: init-transmission
-    image: debian:stable-slim
-    restart: "no"
-    entrypoint: ["/bin/bash", "-c"]
-    command: ["ls -al /setup && ls -al /config && cp -f /setup/settings.json /config"]
-    env_file: .env
-    volumes:
-      - /mnt/data/appdata/transmission:/config:rw
-      - ./config/transmission:/setup
-  transmission:
-    image: lscr.io/linuxserver/transmission:latest
-    container_name: transmission
+  # # --- init-transmission - Copy Transmission settings.json to /config
+  # init-transmission:
+  #   container_name: init-transmission
+  #   image: debian:stable-slim
+  #   restart: "no"
+  #   entrypoint: ["/bin/bash", "-c"]
+  #   command: ["ls -al /setup && ls -al /config && cp -f /setup/settings.json /config"]
+  #   env_file: .env
+  #   volumes:
+  #     - /mnt/data/appdata/transmission:/config:rw
+  #     - ./config/transmission:/setup
+
+  # # --- Transmission - Torrent downloader
+  # transmission:
+  #   image: lscr.io/linuxserver/transmission:latest
+  #   container_name: transmission
+  #   env_file: .env
+  #   environment:
+  #     - PUID=1000
+  #     - PGID=1000
+  #     - TZ=Europe/Amsterdam
+  #   volumes:
+  #     - /mnt/data/appdata/transmission:/config:rw
+  #     - /mnt/data/media/watched:/watched:rw
+  #     - /mnt/data/media/downloads:/downloads:rw
+  #   ports:
+  #     - 9091:9091
+  #     - 51413:51413
+  #     - 51413:51413/udp
+  #   restart: unless-stopped
+  #   networks:
+  #     - frontend
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.http.routers.transmission.entrypoints=http"
+  #     - "traefik.http.routers.transmission.rule=Host(`${TORRENT_DOMAIN}`)"
+  #     - "traefik.http.middlewares.transmission-https-redirect.redirectscheme.scheme=https"
+  #     - "traefik.http.routers.transmission.middlewares=transmission-https-redirect"
+  #     - "traefik.http.routers.transmission-secure.entrypoints=https"
+  #     - "traefik.http.routers.transmission-secure.rule=Host(`${TORRENT_DOMAIN}`)"
+  #     - "traefik.http.routers.transmission-secure.middlewares=authentik@file"
+  #     - "traefik.http.routers.transmission-secure.tls=true"
+  #     - "traefik.http.routers.transmission.service=transmission"
+  #     - "traefik.http.services.transmission.loadbalancer.server.port=9091"
+
+  # --- init-qbittorrent - Copy qBittorrent settings to /config
+  # init-qbittrorrent:
+  #   container_name: init-qbittorrent
+  #   image: debian:stable-slim
+  #   restart: "no"
+  #   entrypoint: ["/bin/bash", "-c"]
+  #   command: ["ls -al /setup && ls -al /config && cp -f /setup/settings.json /config"]
+  #   env_file: .env
+  #   volumes:
+  #     - /mnt/data/appdata/qbittorrent:/config:rw
+  #     - ./config/qbittorrent:/setup
+
+  # --- qBittrorrent - Torrent downloader
+  qbittrorrent:
+    image: lscr.io/linuxserver/qbittorrent:4.6.5
+    container_name: qbittorrent
     env_file: .env
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/Amsterdam
+      - WEBUI_PORT=8080
+      - TORRENTING_PORT=6881
     volumes:
-      - /mnt/data/appdata/transmission:/config:rw
+      - /mnt/data/appdata/qbittorrent:/config:rw
       - /mnt/data/media/watched:/watched:rw
+      - /mnt/data/media/incomplete:/incomplete-downloads:rw
       - /mnt/data/media/downloads:/downloads:rw
     ports:
-      - 9091:9091
-      - 51413:51413
-      - 51413:51413/udp
+      # - 8080:8080
+      - 6881:6881
+      - 6881:6881/udp
     restart: unless-stopped
     networks:
       - frontend
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.transmission.entrypoints=http"
-      - "traefik.http.routers.transmission.rule=Host(`${TORRENT_DOMAIN}`)"
-      - "traefik.http.middlewares.transmission-https-redirect.redirectscheme.scheme=https"
-      - "traefik.http.routers.transmission.middlewares=transmission-https-redirect"
-      - "traefik.http.routers.transmission-secure.entrypoints=https"
-      - "traefik.http.routers.transmission-secure.rule=Host(`${TORRENT_DOMAIN}`)"
-      - "traefik.http.routers.transmission-secure.middlewares=authentik@file"
-      - "traefik.http.routers.transmission-secure.tls=true"
-      - "traefik.http.routers.transmission.service=transmission"
-      - "traefik.http.services.transmission.loadbalancer.server.port=9091"
+      - "traefik.http.routers.qbittorrent.entrypoints=http"
+      - "traefik.http.routers.qbittorrent.rule=Host(`${TORRENT_DOMAIN}`)"
+      - "traefik.http.middlewares.qbittorrent-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.qbittorrent.middlewares=qbittorrent-https-redirect"
+      - "traefik.http.routers.qbittorrent-secure.entrypoints=https"
+      - "traefik.http.routers.qbittorrent-secure.rule=Host(`${TORRENT_DOMAIN}`)"
+      - "traefik.http.routers.qbittorrent-secure.middlewares=authentik@file"
+      - "traefik.http.routers.qbittorrent-secure.tls=true"
+      - "traefik.http.routers.qbittorrent.service=qbittorrent"
+      - "traefik.http.services.qbittorrent.loadbalancer.server.port=8080"
 
 networks:
   frontend:
