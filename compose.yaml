@@ -116,7 +116,7 @@ services:
       - /mnt/data/media/incomplete:/incomplete-downloads:rw
       - /mnt/data/media/downloads:/downloads:rw
     ports:
-      # - 8080:8080
+      - 8881:8080
       - 6881:6881
       - 6881:6881/udp
     restart: unless-stopped
